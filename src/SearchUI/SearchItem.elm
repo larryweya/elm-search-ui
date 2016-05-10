@@ -31,6 +31,17 @@ empty =
   }
 
 
+operators : List Operator
+operators =
+  [Empty, Equal, Between]
+
+
 view : Address Action -> Model -> List Html  
 view address model =
-  [ div [class "col-md-4"] [] ]
+  [ div
+      [ class "col-md-4" ]
+      []
+  , div
+      [ class "col-md-4" ]
+      []
+  ]

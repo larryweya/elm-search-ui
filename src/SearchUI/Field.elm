@@ -5,7 +5,8 @@ module SearchUI.Field
   ) where
 
 
-type FieldType = Number
+type FieldType = None
+               | Number
                | Text
                | Options
                | Date

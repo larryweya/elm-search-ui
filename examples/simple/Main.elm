@@ -28,7 +28,11 @@ model =
 
 update : Action -> Model -> Model
 update action model =
-  model
+  case action of
+    NoOp ->
+      model
+    SearchUIAction uiAction ->
+      SearchUI.update uiAction model
 
 
 view : Address Action -> Model -> Html    

@@ -1,13 +1,16 @@
 module SearchUI
   ( Model
   , Action(..)
+  , update
   , view
   ) where
 
 
+import Debug
 import Signal exposing (Address, forwardTo)
 import Html exposing (Html, div, select, option, text)
 import Html.Attributes exposing (id, class, value, selected)
+import Html.Events exposing (on, targetValue)
 import SearchUI.Field as Field
 import SearchUI.SearchItem as SearchItem
 
@@ -26,6 +29,19 @@ type alias Model =
 
 type Action = NoOp
             | SearchItemAction SearchItem.Action
+            | SelectField SearchItem.Model String
+
+
+update : Action -> Model -> Model
+update action model =
+  case action of
+    NoOp ->
+      model
+    SearchItemAction itemAction
+      model
+    SelectField item value
+      item.id = value
+    
 
 viewEmptyOption : Html
 viewEmptyOption =
@@ -46,7 +62,8 @@ viewFieldSelect address fields item =
   div
     [ class "col-md-4" ]
     [ select
-        []
+        [ on "change" targetValue (\value -> Signal.message address (SelectField item value) )
+        ]
         (viewEmptyOption :: (List.map (viewFieldOption address item) fields))
     ]
 
