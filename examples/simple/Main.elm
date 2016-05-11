@@ -22,8 +22,12 @@ model =
       , Field.init "date_of_birth" Field.Date "Date of Birth"
       ]
    , items =
-      [ { field = Field.init "id_number" Field.Number "ID Number" }
-      , { field = Field.init "id_number" Field.Number "ID Number" }
+      [ { field    = Field.init "id_number" Field.Number "ID Number"
+        , operator = Just SearchItem.Equal
+        }
+      , { field    = Field.init "id_number" Field.Number "ID Number"
+        , operator = Nothing
+        }
       ]
   }
 
