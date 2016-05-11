@@ -22,18 +22,18 @@ type Operator = Empty
 
 type alias Model =
   { field    : Field.Field
-  , operator : Maybe Operator
+  , operator : Operator
   }
 
 
 type Action = UpdateField Field.Field
-            | UpdateOperator (Maybe Operator)
+            | UpdateOperator Operator
 
 
 empty : Model
 empty =
   { field    = Field.empty
-  , operator = Nothing
+  , operator = Equal
   }
 
 
@@ -41,9 +41,9 @@ update : Action -> Model -> Model
 update action model =
   case action of
     UpdateField newField ->
-      { model | field = Debug.log "new" newField }
+      { model | field = newField, operator = Equal }
     UpdateOperator maybeNewOperator ->
-      model -- todo: implement
+      { model | operator = maybeNewOperator }
 
 
 operatorsFor : Field.FieldType -> List Operator
@@ -61,26 +61,26 @@ operatorsFor fieldType =
       [Empty, Equal, Between]
 
 
+operatorFromString : String -> Operator
+operatorFromString operatorString =
+  case operatorString of
+    "Empty" ->
+      Empty
+    "Equal" ->
+      Equal
+    "Between" ->
+      Between
+    _ ->
+      Debug.crash <| "Unknown operator: " ++ operatorString        
+
+
 viewOperatorsOption : Model -> Operator -> Html
 viewOperatorsOption model operator =
   option
     [ value <| toString operator
-    , selected <| (Maybe.withDefault Empty model.operator) == operator
+    , selected <| model.operator == operator
     ]
     [ text <| toString operator ]
-
-
-operatorFromString : String -> Maybe Operator
-operatorFromString operatorString =
-  case operatorString of
-    "Empty" ->
-      Just Empty
-    "Equal" ->
-      Just Equal
-    "Between" ->
-      Just Between
-    _ ->
-      Debug.crash <| "Unknown operator: " ++ operatorString
 
 
 viewOperatorsSelect : Address Action -> Model -> Html

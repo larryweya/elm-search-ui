@@ -23,11 +23,13 @@ model =
       ]
    , items =
       [ { field    = Field.init "id_number" Field.Number "ID Number"
-        , operator = Just SearchItem.Equal
+        , operator = SearchItem.Equal
         }
+{--}
       , { field    = Field.init "id_number" Field.Number "ID Number"
-        , operator = Nothing
+        , operator = SearchItem.Empty
         }
+--}
       ]
   }
 

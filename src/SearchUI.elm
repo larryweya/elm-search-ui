@@ -43,11 +43,12 @@ updateMatchingItem targetIndex itemAction currentIndex currentItem =
     currentItem
 
 
+{-| FInd a field by its id and return the first or Nothing
+-}
 findField : Fields -> String -> Maybe Field.Field
 findField fields id =
   List.filter (\field -> field.id == id) fields
   |> List.head
-  |> Debug.log "findField"
 
 
 update : Action -> Model -> Model
