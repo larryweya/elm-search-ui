@@ -8,6 +8,7 @@ module SearchUI
 
 import Debug
 import Signal exposing (Address, forwardTo)
+import Json.Decode as JsonDecode
 import Html exposing (Html, div, select, option, text)
 import Html.Attributes exposing (id, class, value, selected)
 import Html.Events exposing (on, targetValue)
@@ -28,29 +29,40 @@ type alias Model =
 
 
 type Action = NoOp
-            | SearchItemAction String SearchItem.Action
-            | SelectField SearchItem.Model String
+            | SearchItemAction Int SearchItem.Action
+            | SelectField Int String
 
 
 {-| Run update on the item if its field id matches the target field id
 -}              
-updateMatchingItem : String -> SearchItem.Action -> SearchItem.Model -> SearchItem.Model
-updateMatchingItem targetItemFieldId itemAction currentItem =
-  if targetItemFieldId == currentItem.field.id then
+updateMatchingItem : Int -> SearchItem.Action -> Int -> SearchItem.Model -> SearchItem.Model
+updateMatchingItem targetIndex itemAction currentIndex currentItem =
+  if targetIndex == currentIndex then
     SearchItem.update itemAction currentItem
   else
     currentItem
-  
+
+
+findField : Fields -> String -> Maybe Field.Field
+findField fields id =
+  List.filter (\field -> field.id == id) fields
+  |> List.head
+  |> Debug.log "findField"
+
 
 update : Action -> Model -> Model
 update action model =
   case action of
     NoOp ->
       model
-    SearchItemAction itemFieldId itemAction ->
-      { model | items = List.map (updateMatchingItem itemFieldId itemAction) model.items }
-    SelectField item value ->
-      model
+    SearchItemAction index itemAction ->
+      { model | items = List.indexedMap (updateMatchingItem index itemAction) model.items }
+    SelectField index newFieldId ->
+      let
+        newField = findField model.fields newFieldId
+                   |> Maybe.withDefault Field.empty
+      in
+        { model | items = List.indexedMap (updateMatchingItem index <| SearchItem.UpdateField newField) model.items }
     
 
 viewEmptyOption : Html
@@ -66,30 +78,34 @@ viewFieldOption address item field =
     ]
     [ text field.label ]
 
+
+targetSelectedIndex =
+  JsonDecode.at ["target", "selectedIndex"] JsonDecode.int      
+
   
-viewFieldSelect : Address Action -> Fields -> SearchItem.Model -> Html
-viewFieldSelect address fields item =
+viewFieldSelect : Address Action -> Fields -> Int -> SearchItem.Model -> Html
+viewFieldSelect address fields itemIndex item =
   div
     [ class "col-md-4" ]
     [ select
-        [ on "change" targetValue (\value -> Signal.message address (SelectField item value) )
+        [ on "change" targetValue (\fieldId -> Signal.message address (SelectField itemIndex fieldId) )
         ]
         (viewEmptyOption :: (List.map (viewFieldOption address item) fields))
     ]
 
 
-viewItem : Address Action -> Fields -> SearchItem.Model -> Html
-viewItem address fields item =
+viewItem : Address Action -> Fields -> Int -> SearchItem.Model -> Html
+viewItem address fields itemIndex item =
   div
     [ class "form-group" ]
-    ( (viewFieldSelect address fields item)
-      :: (SearchItem.view (forwardTo address <| SearchItemAction item.field.id) item)
+    ( (viewFieldSelect address fields itemIndex item)
+      :: (SearchItem.view (forwardTo address <| SearchItemAction itemIndex) item)
     )
 
       
 view : Address Action -> Model -> Html                 
 view address model =
   div [class "container"]
-      ( (List.map (viewItem address model.fields) model.items)
-        ++ [viewItem address model.fields SearchItem.empty]
+      ( (List.indexedMap (viewItem address model.fields) model.items)
+        ++ [viewItem address model.fields -1 SearchItem.empty]
       )

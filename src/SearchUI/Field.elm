@@ -2,6 +2,7 @@ module SearchUI.Field
   ( FieldType(..)
   , Field
   , init
+  , empty
   ) where
 
 
@@ -24,4 +25,9 @@ init id type' label =
   { id    = id
   , type' = type'
   , label = label
-  }                 
+  }
+
+
+empty : Field
+empty =
+  init "" None ""

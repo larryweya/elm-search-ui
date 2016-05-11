@@ -18,7 +18,7 @@ type alias Model =
   }
 
 
-type Action = NoOp
+type Action = UpdateField Field.Field
 
 
 type Operator = Empty
@@ -28,7 +28,7 @@ type Operator = Empty
 
 empty : Model
 empty =
-  { field = Field.init "" Field.None ""
+  { field = Field.empty
   }
 
 
@@ -39,7 +39,9 @@ operators =
 
 update : Action -> Model -> Model
 update action model =
-  model
+  case action of
+    UpdateField newField ->
+      { model | field = Debug.log "new" newField }
 
 
 viewOperatorsSelect : Address Action -> Model -> Html
