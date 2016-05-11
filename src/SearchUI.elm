@@ -28,19 +28,29 @@ type alias Model =
 
 
 type Action = NoOp
-            | SearchItemAction SearchItem.Action
+            | SearchItemAction String SearchItem.Action
             | SelectField SearchItem.Model String
 
+
+{-| Run update on the item if its field id matches the target field id
+-}              
+updateMatchingItem : String -> SearchItem.Action -> SearchItem.Model -> SearchItem.Model
+updateMatchingItem targetItemFieldId itemAction currentItem =
+  if targetItemFieldId == currentItem.field.id then
+    SearchItem.update itemAction currentItem
+  else
+    currentItem
+  
 
 update : Action -> Model -> Model
 update action model =
   case action of
     NoOp ->
       model
-    SearchItemAction itemAction
+    SearchItemAction itemFieldId itemAction ->
+      { model | items = List.map (updateMatchingItem itemFieldId itemAction) model.items }
+    SelectField item value ->
       model
-    SelectField item value
-      item.id = value
     
 
 viewEmptyOption : Html
@@ -52,7 +62,7 @@ viewFieldOption : Address Action -> SearchItem.Model -> Field.Field -> Html
 viewFieldOption address item field =
   option
     [ value field.id
-    , selected <| item.id == field.id
+    , selected <| item.field.id == field.id
     ]
     [ text field.label ]
 
@@ -73,7 +83,7 @@ viewItem address fields item =
   div
     [ class "form-group" ]
     ( (viewFieldSelect address fields item)
-      :: (SearchItem.view (forwardTo address SearchItemAction) item)
+      :: (SearchItem.view (forwardTo address <| SearchItemAction item.field.id) item)
     )
 
       

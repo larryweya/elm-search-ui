@@ -21,7 +21,7 @@ model =
       , Field.init "gender" Field.Options "Gender"
       ]
    , items =
-      [ { id = "id_number" }
+      [ { field = Field.init "id_number" Field.Number "Id Number" }
       ]
   }
 
