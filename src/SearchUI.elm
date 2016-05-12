@@ -9,9 +9,9 @@ module SearchUI
 import Debug
 import Signal exposing (Address, forwardTo)
 import Json.Decode as JsonDecode
-import Html exposing (Html, div, select, option, text)
-import Html.Attributes exposing (id, class, value, selected)
-import Html.Events exposing (on, targetValue)
+import Html exposing (Html, div, select, option, text, a)
+import Html.Attributes exposing (id, class, value, selected, href)
+import Html.Events exposing (on, targetValue, onClick)
 import SearchUI.Field as Field
 import SearchUI.SearchItem as SearchItem
 
@@ -28,7 +28,7 @@ type alias Model =
   }                 
 
 
-type Action = NoOp
+type Action = AddItem
             | SearchItemAction Int SearchItem.Action
             | SelectField Int String
 
@@ -54,8 +54,8 @@ findField fields id =
 update : Action -> Model -> Model
 update action model =
   case action of
-    NoOp ->
-      model
+    AddItem ->
+      { model | items = model.items ++ [SearchItem.empty] }
     SearchItemAction index itemAction ->
       { model | items = List.indexedMap (updateMatchingItem index itemAction) model.items }
     SelectField index newFieldId ->
@@ -105,10 +105,23 @@ viewItem address fields itemIndex item =
       :: (SearchItem.view (forwardTo address <| SearchItemAction itemIndex) item)
     )
 
+
+viewAddItem : Address Action -> Model -> Html
+viewAddItem address model =
+  div
+    [ class "row" ]
+    [ a
+        [ class "btn"
+        , href "javascript:;"
+        , onClick address AddItem
+        ]
+        [ text "+ Add Filter" ]
+    ]
+
       
 view : Address Action -> Model -> Html                 
 view address model =
   div [class "container"]
       ( (List.indexedMap (viewItem address model.fields) model.items)
-        ++ [viewItem address model.fields -1 SearchItem.empty]
+        ++ [ viewAddItem address model ]
       )
