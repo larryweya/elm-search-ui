@@ -27,9 +27,9 @@ type alias SearchItems = List (ID, SearchItem.Model)
 
 
 type Action = AddItem
-            | DeleteItem Int
-            | SearchItemAction Int SearchItem.Action
-            | SelectField Int String                       
+            | DeleteItem ID
+            | SearchItemAction ID SearchItem.Action
+            | SelectField ID String                       
 
 
 type alias Model =
@@ -39,14 +39,17 @@ type alias Model =
   }                 
 
 
-{-| Run update on the item if its field id matches the target field id
+{-| Run update on the item if its id matches the provided target item's id
 -}              
-updateMatchingItem : Int -> SearchItem.Action -> Int -> (ID, SearchItem.Model) -> (ID, SearchItem.Model)
-updateMatchingItem targetIndex itemAction currentIndex (itemId, currentItem) =
-  if targetIndex == currentIndex then
-    (itemId, SearchItem.update itemAction currentItem)
-  else
-    (itemId, currentItem)
+updateMatchingItem : ID -> SearchItem.Action -> (ID, SearchItem.Model) -> (ID, SearchItem.Model)
+updateMatchingItem targetItemId itemAction (itemId, currentItem) =
+  let
+    item = if targetItemId == itemId then
+             SearchItem.update itemAction currentItem
+           else
+             currentItem
+  in
+    (itemId, item)
 
 
 {-| Find a field by its id and return the first or Nothing
@@ -73,16 +76,16 @@ update action model =
       }
     DeleteItem itemId ->
       { model | items = deleteItem model.items itemId }
-    SearchItemAction index itemAction ->
-      { model | items = List.indexedMap (updateMatchingItem index itemAction) model.items }
-    SelectField index newFieldId ->
+    SearchItemAction itemId itemAction ->
+      { model | items = List.map (updateMatchingItem itemId itemAction) model.items }
+    SelectField itemId newFieldId ->
       let
         -- if the fieldId cannot be found - ideally the empty default option, return an empty field
         newField = findField model.fields newFieldId
                    |> Maybe.withDefault Field.empty
       in
         { model |
-            items = List.indexedMap (updateMatchingItem index <| SearchItem.UpdateField newField) model.items
+            items = List.map (updateMatchingItem itemId <| SearchItem.UpdateField newField) model.items
         }
     
 
@@ -104,13 +107,13 @@ viewFieldOption address item field =
 --  JsonDecode.at ["target", "selectedIndex"] JsonDecode.int      
 
   
-viewFieldSelect : Address Action -> Fields -> Int -> SearchItem.Model -> Html
-viewFieldSelect address fields itemIndex item =
+viewFieldSelect : Address Action -> Fields -> ID -> SearchItem.Model -> Html
+viewFieldSelect address fields itemId item =
   div
     [ class "col-md-3" ]
     [ select
         [ class "form-control input-sm mb15"
-        , on "change" targetValue (\fieldId -> Signal.message address (SelectField itemIndex fieldId) )
+        , on "change" targetValue (\fieldId -> Signal.message address (SelectField itemId fieldId) )
         ]
         (viewEmptyOption :: (List.map (viewFieldOption address item) fields))
     ]
@@ -129,13 +132,13 @@ viewDeleteItem address itemId =
     ]
 
 
-viewItem : Address Action -> Fields -> Int -> (ID, SearchItem.Model) -> Html
-viewItem address fields itemIndex (itemId, item) =
+viewItem : Address Action -> Fields -> (ID, SearchItem.Model) -> Html
+viewItem address fields (itemId, item) =
   div
     [ class "form-group" ]
     ( (viewDeleteItem address itemId)
-      :: (viewFieldSelect address fields itemIndex item)
-      :: (SearchItem.view (forwardTo address <| SearchItemAction itemIndex) item)
+      :: (viewFieldSelect address fields itemId item)
+      :: (SearchItem.view (forwardTo address <| SearchItemAction itemId) item)
     )
 
 
@@ -155,6 +158,6 @@ viewAddItem address model =
 view : Address Action -> Model -> Html                 
 view address model =
   div [ class "container" ]
-      ( (List.indexedMap (viewItem address model.fields) model.items)
+      ( (List.map (viewItem address model.fields) model.items)
         ++ [ viewAddItem address model ]
       )
