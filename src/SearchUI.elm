@@ -26,7 +26,7 @@ type alias Fields = List Field.Field
 type alias SearchItems = List (ID, SearchItem.Model)
 
 
-type Action = AddItem
+type Action = AddItem (Maybe SearchItem.Model)
             | DeleteItem ID
             | SearchItemAction ID SearchItem.Action
             | SelectField ID String                       
@@ -68,12 +68,14 @@ deleteItem items itemId =
 update : Action -> Model -> Model
 update action model =
   case action of
-    AddItem ->
-      
-      { model |
-          items = model.items ++ [ (model.nextId, SearchItem.empty) ],
-          nextId = model.nextId + 1
-      }
+    AddItem maybeItem ->
+      let
+        item = Maybe.withDefault SearchItem.empty maybeItem
+      in
+        { model |
+            items = model.items ++ [ (model.nextId, item) ],
+            nextId = model.nextId + 1
+        }
     DeleteItem itemId ->
       { model | items = deleteItem model.items itemId }
     SearchItemAction itemId itemAction ->
@@ -149,7 +151,7 @@ viewAddItem address model =
     [ a
         [ class "btn"
         , href "javascript:;"
-        , onClick address AddItem
+        , onClick address <| AddItem Nothing
         ]
         [ text "+ Add Filter" ]
     ]
