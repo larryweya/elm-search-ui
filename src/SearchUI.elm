@@ -60,6 +60,7 @@ update action model =
       { model | items = List.indexedMap (updateMatchingItem index itemAction) model.items }
     SelectField index newFieldId ->
       let
+        -- if the fieldId cannot be found - ideally the empty default option, return an empty field
         newField = findField model.fields newFieldId
                    |> Maybe.withDefault Field.empty
       in
@@ -87,9 +88,10 @@ targetSelectedIndex =
 viewFieldSelect : Address Action -> Fields -> Int -> SearchItem.Model -> Html
 viewFieldSelect address fields itemIndex item =
   div
-    [ class "col-md-4" ]
+    [ class "col-md-3" ]
     [ select
-        [ on "change" targetValue (\fieldId -> Signal.message address (SelectField itemIndex fieldId) )
+        [ class "form-control input-sm mb15"
+        , on "change" targetValue (\fieldId -> Signal.message address (SelectField itemIndex fieldId) )
         ]
         (viewEmptyOption :: (List.map (viewFieldOption address item) fields))
     ]

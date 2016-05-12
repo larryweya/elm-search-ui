@@ -9,7 +9,7 @@ module SearchUI.Field
 type FieldType = None
                | Number
                | Text
-               | Options
+               | Options (List (String, String))
                | Date
 
 

@@ -18,16 +18,19 @@ model : Model
 model =
   { fields =
       [ Field.init "id_number" Field.Number "ID Number"
-      , Field.init "gender" Field.Options "Gender"
+      , Field.init "gender" (Field.Options [("male", "Male"), ("female", "Female")]) "Gender"
       , Field.init "date_of_birth" Field.Date "Date of Birth"
       ]
-   , items =
-      [ { field    = Field.init "id_number" Field.Number "ID Number"
+   , items =    
+      [      
+        { field    = Field.init "id_number" Field.Number "ID Number"
         , operator = SearchItem.Equal
+        , value    = Just <| SearchItem.ScalarValue "2222"
         }
-{--}
-      , { field    = Field.init "id_number" Field.Number "ID Number"
-        , operator = SearchItem.Empty
+{--       
+      , { field    = Field.init "gender" Field.Number "ID Number"
+        , operator = SearchItem.Equal
+        , value    = Just <| SearchItem.ListValue ["male", "female"]
         }
 --}
       ]
