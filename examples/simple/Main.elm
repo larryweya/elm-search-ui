@@ -23,17 +23,22 @@ model =
       ]
    , items =    
       [      
-        { field    = Field.init "id_number" Field.Number "ID Number"
-        , operator = SearchItem.Equal
-        , value    = Just <| SearchItem.ScalarValue "2222"
-        }
+        ( 0
+        , { field    = Field.init "id_number" Field.Number "ID Number"
+          , operator = SearchItem.Equal
+          , value    = Just <| SearchItem.ScalarValue "2222"
+          }
+        )
 {--       
-      , { field    = Field.init "gender" Field.Number "ID Number"
-        , operator = SearchItem.Equal
-        , value    = Just <| SearchItem.ListValue ["male", "female"]
-        }
+      , ( 1
+        , { field    = Field.init "gender" Field.Number "ID Number"
+          , operator = SearchItem.Equal
+          , value    = Just <| SearchItem.ListValue ["male", "female"]
+          }
+        )
 --}
       ]
+    , nextId = 2
   }
 
 
