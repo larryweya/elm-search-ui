@@ -11,7 +11,7 @@ import Signal exposing (Address, forwardTo)
 import Json.Decode as JsonDecode
 import Json.Encode
 import Html exposing (Html, div, select, option, text, a)
-import Html.Attributes exposing (id, class, value, selected, href, property)
+import Html.Attributes exposing (id, name, class, value, selected, href, property)
 import Html.Events exposing (on, targetValue, onClick)
 import SearchUI.Field as Field
 import SearchUI.SearchItem as SearchItem
@@ -84,7 +84,7 @@ update action model =
       let
         -- if the fieldId cannot be found - ideally the empty default option, return an empty field
         newField = findField model.fields newFieldId
-                   |> Maybe.withDefault Field.empty
+                 |> Maybe.withDefault Field.empty
       in
         { model |
             items = List.map (updateMatchingItem itemId <| SearchItem.UpdateField newField) model.items
@@ -114,7 +114,8 @@ viewFieldSelect address fields itemId item =
   div
     [ class "col-md-3" ]
     [ select
-        [ class "form-control input-sm mb15"
+        [ name <| "searchui[filters][]" ++ item.field.id
+        , class "form-control input-sm mb15"
         , on "change" targetValue (\fieldId -> Signal.message address (SelectField itemId fieldId) )
         ]
         (viewEmptyOption :: (List.map (viewFieldOption address item) fields))

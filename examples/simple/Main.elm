@@ -20,6 +20,7 @@ model =
       [ Field.init "id_number" Field.Number "ID Number"
       , Field.init "gender" (Field.Options [("male", "Male"), ("female", "Female")]) "Gender"
       , Field.init "date_of_birth" Field.Date "Date of Birth"
+      , Field.init "valuation" Field.Number "Annual Rent"
       ]
    , items =    
       [      

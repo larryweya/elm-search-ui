@@ -11,7 +11,7 @@ module SearchUI.SearchItem
 
 import Signal exposing (Address)
 import Html exposing (Html, Attribute, input, div, label, text, select, option)
-import Html.Attributes exposing (class, value, selected)
+import Html.Attributes exposing (name, class, value, selected, type')
 import Html.Events exposing (on, targetValue)
 import SearchUI.Field as Field
 
@@ -98,24 +98,43 @@ scalarValueToString maybeValue =
 
 {-| Takes the on input handler attribute and the value
 -}
-viewInput : Attribute -> String -> String -> Html
-viewInput onInput stringValue extraClasses =
+viewInput : String -> List Attribute -> Html
+viewInput extraClasses extraAttributes =
    input
-        [ class <| "form-control mb15 " ++ extraClasses
-        , onInput
-        , value stringValue
-        ]
-        [ ]
+        ( (class <| "form-control mb15 " ++ extraClasses)
+--          :: (name <| "searchui[" ++ kind ++ "][]" ++ fieldName)
+          :: extraAttributes
+        )
+        []
 
 
+{-| Hidden inputs are used when field is none or the operator does not use inputs
+e.g. the Empty operator. They ensure our form output arrays are always the same length
+-}
+viewHiddenInput : Model -> String -> Html
+viewHiddenInput model kind =
+  viewInput
+    ""
+      [ name <| "searchui[" ++ kind ++ "]" ++ "[]" ++ model.field.id
+      , type' "hidden"
+      ]
+
+
+viewEmptyInput : Address Action -> Model -> List Html
+viewEmptyInput address model =
+  [ viewHiddenInput model "values" ]
+      
+      
 viewEqualInput : Address Action -> Model -> List Html
 viewEqualInput address model =
   [ div
       [ class "col-md-3" ]
       [ viewInput
-          (on "input" targetValue (\value -> Signal.message address (UpdateValue value) ))
-          (scalarValueToString model.value)
           ""
+          [ name <| "searchui[values][]" ++ model.field.id
+          , value (scalarValueToString model.value)
+          , on "input" targetValue (\value -> Signal.message address (UpdateValue value))
+          ]
       ]
   ]
 
@@ -133,11 +152,14 @@ viewBetweenInput address model =
 -}
 
 
+{-| We implement a view function for each operator to alow the function to decide how its
+values are rendered
+-}
 viewValues : Address Action -> Model -> List Html
 viewValues address model =
   case model.operator of
     Empty ->
-      [ text "" ]
+      viewEmptyInput address model
     Equal ->
      viewEqualInput address model
     --Between ->
@@ -156,24 +178,23 @@ viewOperatorsOption model operator =
      
 viewOperatorsSelect : Address Action -> Model -> Html
 viewOperatorsSelect address model =
-  case model.field.type' of
-    Field.None ->
-      text ""
-    _ ->
-      select
-        [ class "form-control input-sm mb15"
-        , on "change" targetValue (\operatorString -> Signal.message address (UpdateOperator <| operatorFromString operatorString) )
-        ]
-        ( List.map (viewOperatorsOption model) <| operatorsFor model.field.type' )
-
-
+  select
+    [ name <| "searchui[operators][]" ++ model.field.id
+    , class "form-control input-sm mb15"
+    , on "change" targetValue (\operatorString -> Signal.message address (UpdateOperator <| operatorFromString operatorString) )
+    ]
+    ( List.map (viewOperatorsOption model) <| operatorsFor model.field.type' )
+      
+      
 {-| If field type is None return blank text, otherwise we render both operator select and values
 -}
 view : Address Action -> Model -> List Html  
 view address model =
   case model.field.type' of
     Field.None ->
-      [ text "" ]
+      [ viewHiddenInput model "operators"
+      , viewHiddenInput model "values"
+      ]
     _ ->
       ( div
           [ class "col-md-2" ]
