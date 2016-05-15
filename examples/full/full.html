@@ -29,15 +29,13 @@
 </div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
 <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
-<script src="../../elm.js"></script>
+<script src="elm.js"></script>
 <script type="text/javascript">
   // get an empty <div>
   var container = document.getElementById('form-container');
 
   // embed our Elm program in that <div>
-  var app = Elm.SearchUI.Examples.Full.embed(container);
-  setTimeout(function () {
-    app.ports.fields.send([
+  var fields = [
       {
         type: "text",
         id: "valuation",
@@ -47,8 +45,8 @@
         },
         required: false
       }
-    ]);
-  }, 10);
+    ];
+  var app = Elm.SearchUI.Examples.Full.embed(container, {fields: fields});
 </script>
 </body>
 </html>

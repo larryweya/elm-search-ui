@@ -34,11 +34,6 @@ type alias Model =
   }
 
 
-init : (Model, Cmd Msg)
-init =
-  ({ fields = [] }, Cmd.none)
-
-
 fieldTypeFromString type' =
   case type' of
     "text" ->
@@ -63,11 +58,29 @@ decodeField =
 
 
 decodeFields =
-  Json.Decode.list decodeField  
+  Json.Decode.list decodeField
 
 
 decodePayload json =
-  Json.Decode.decodeValue decodeFields json
+  Json.Decode.decodeValue
+    (Json.Decode.object1
+      (\fields -> fields)
+      ("fields" := decodeFields)
+    )
+    json
+
+
+init : Json.Decode.Value -> (Model, Cmd Msg)
+init fieldJson =
+  let
+     fieldData = (decodePayload fieldJson)
+     data = case fieldData of
+       Ok result ->
+         result
+       Err reason ->
+        Debug.crash reason
+  in
+    ({ fields = data }, Cmd.none)
 
 
 update : Msg -> Model -> (Model, Cmd Msg)
@@ -112,7 +125,7 @@ subscriptions model =
 
 
 main =
-  App.program
+  App.programWithFlags
     { init = init
     , view  = view
     , update = update
