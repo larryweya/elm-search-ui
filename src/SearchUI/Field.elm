@@ -1,18 +1,19 @@
-module SearchUI.Field
+module SearchUI.Field exposing
   ( FieldType(..)
   , Field
   , init
   , empty
-  ) where
+  )
 
 
-type FieldType = None
-               | Number
-               | Text
-               | Options (List (String, String))
-               | Date
-
-
+type FieldType
+  = None
+  | Number
+  | Text
+  | Options (List (String, String))
+  | Date
+    
+    
 type alias Field =
   { id    : String
   , type' : FieldType

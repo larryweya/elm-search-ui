@@ -29,13 +29,13 @@
 </div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
 <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
-<script src="../../elm.js"></script>
+<script src="elm.js"></script>
 <script type="text/javascript">
   // get an empty <div>
   var container = document.getElementById('form-container');
 
   // embed our Elm program in that <div>
-  var elm = Elm.embed(Elm.SearchUI.Examples.Simple, container);
+  var elm = Elm.SearchUI.Examples.Simple.embed(container);
 </script>
 </body>
 </html>

@@ -1,17 +1,15 @@
-module SearchUI.Examples.Simple where
+module SearchUI.Examples.Simple exposing(..)
 
 
-import Signal exposing (Address, forwardTo)
 import Html exposing (Html, div)
 import Html.Attributes exposing (id, class)
-import StartApp.Simple as StartApp
+import Html.App as App
 import SearchUI exposing (Model)
 import SearchUI.Field as Field
 import SearchUI.SearchItem as SearchItem
 
 
-type Action = NoOp
-            | SearchUIAction SearchUI.Action
+type Msg = SearchUIMsg SearchUI.Msg
 
 
 model : Model 
@@ -43,23 +41,20 @@ model =
   }
 
 
-update : Action -> Model -> Model
-update action model =
-  case action of
-    NoOp ->
-      model
-    SearchUIAction uiAction ->
-      SearchUI.update uiAction model
+update : Msg -> Model -> Model
+update msg model =
+  case msg of
+    SearchUIMsg uiMsg ->
+      SearchUI.update uiMsg model
 
 
-view : Address Action -> Model -> Html    
-view address model =
-  SearchUI.view (forwardTo address SearchUIAction) model
+view : Model -> Html Msg
+view model =
+  App.map SearchUIMsg (SearchUI.view model)
 
 
-main : Signal Html
 main =
-  StartApp.start
+  App.beginnerProgram
     { model = model
     , update = update
     , view = view

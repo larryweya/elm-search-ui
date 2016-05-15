@@ -1,25 +1,26 @@
-module SearchUI.SearchItem
+module SearchUI.SearchItem exposing
   ( Operator(..)
   , Model
-  , Action(..)
+  , Msg(..)
   , Value(..)
   , empty
   , update
   , view
-  ) where
+  )
 
 
-import Signal exposing (Address)
+import Json.Decode
 import Html exposing (Html, Attribute, input, div, label, text, select, option)
 import Html.Attributes exposing (name, class, value, selected, type')
-import Html.Events exposing (on, targetValue)
+import Html.Events exposing (on, targetValue, onInput)
 import SearchUI.Field as Field
 
 
-type Operator = Empty
-              | Equal
---              | Between
-                
+type Operator
+  = Empty
+  | Equal
+--| Between
+
 
 type alias Model =
   { field    : Field.Field
@@ -28,15 +29,17 @@ type alias Model =
   }
 
 
-type Value = ScalarValue String
---           | ListValue (List String)
+type Value
+  = ScalarValue String
+--| ListValue (List String)
 
 
-type Action = UpdateField Field.Field
-            | UpdateOperator Operator
-            | UpdateValue String
-
-
+type Msg
+  = UpdateField Field.Field
+  | UpdateOperator Operator
+  | UpdateValue String
+    
+    
 empty : Model
 empty =
   { field    = Field.empty
@@ -45,9 +48,9 @@ empty =
   }
 
 
-update : Action -> Model -> Model
-update action model =
-  case action of
+update : Msg -> Model -> Model
+update msg model =
+  case msg of
     UpdateField newField ->
       -- when a new field is set, reset everything
       { model | field = newField, operator = Equal, value = Nothing }
@@ -98,7 +101,7 @@ scalarValueToString maybeValue =
 
 {-| Takes the on input handler attribute and the value
 -}
-viewInput : String -> List Attribute -> Html
+viewInput : String -> List (Attribute Msg) -> Html Msg
 viewInput extraClasses extraAttributes =
    input
         ( (class <| "form-control mb15 " ++ extraClasses)
@@ -111,7 +114,7 @@ viewInput extraClasses extraAttributes =
 {-| Hidden inputs are used when field is none or the operator does not use inputs
 e.g. the Empty operator. They ensure our form output arrays are always the same length
 -}
-viewHiddenInput : Model -> String -> Html
+viewHiddenInput : Model -> String -> Html Msg
 viewHiddenInput model kind =
   viewInput
     ""
@@ -120,20 +123,20 @@ viewHiddenInput model kind =
       ]
 
 
-viewEmptyInput : Address Action -> Model -> List Html
-viewEmptyInput address model =
+viewEmptyInput : Model -> List (Html Msg)
+viewEmptyInput model =
   [ viewHiddenInput model "values" ]
       
       
-viewEqualInput : Address Action -> Model -> List Html
-viewEqualInput address model =
+viewEqualInput : Model -> List (Html Msg)
+viewEqualInput model =
   [ div
       [ class "col-md-3" ]
       [ viewInput
           ""
           [ name <| "searchui[values][]" ++ model.field.id
           , value (scalarValueToString model.value)
-          , on "input" targetValue (\value -> Signal.message address (UpdateValue value))
+          , onInput (\value -> UpdateValue value)
           ]
       ]
   ]
@@ -155,18 +158,18 @@ viewBetweenInput address model =
 {-| We implement a view function for each operator to alow the function to decide how its
 values are rendered
 -}
-viewValues : Address Action -> Model -> List Html
-viewValues address model =
+viewValues : Model -> List (Html Msg)
+viewValues model =
   case model.operator of
     Empty ->
-      viewEmptyInput address model
+      viewEmptyInput model
     Equal ->
-     viewEqualInput address model
+     viewEqualInput model
     --Between ->
     --  viewBetweenInput address model
 
 
-viewOperatorsOption : Model -> Operator -> Html
+viewOperatorsOption : Model -> Operator -> Html Msg
 viewOperatorsOption model operator =
   option
     [ value <| toString operator
@@ -176,20 +179,20 @@ viewOperatorsOption model operator =
 
 
      
-viewOperatorsSelect : Address Action -> Model -> Html
-viewOperatorsSelect address model =
+viewOperatorsSelect : Model -> Html Msg
+viewOperatorsSelect model =
   select
     [ name <| "searchui[operators][]" ++ model.field.id
     , class "form-control input-sm mb15"
-    , on "change" targetValue (\operatorString -> Signal.message address (UpdateOperator <| operatorFromString operatorString) )
+    , on "change" (Json.Decode.map (\operatorString -> UpdateOperator <| operatorFromString operatorString) targetValue)
     ]
     ( List.map (viewOperatorsOption model) <| operatorsFor model.field.type' )
       
       
 {-| If field type is None return blank text, otherwise we render both operator select and values
 -}
-view : Address Action -> Model -> List Html  
-view address model =
+view : Model -> List (Html Msg)
+view model =
   case model.field.type' of
     Field.None ->
       [ viewHiddenInput model "operators"
@@ -198,7 +201,6 @@ view address model =
     _ ->
       ( div
           [ class "col-md-2" ]
-          [ viewOperatorsSelect address model ]
-        :: (viewValues address model)
+          [ viewOperatorsSelect model ]
+        :: (viewValues model)
       )
-      
